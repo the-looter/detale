@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - DETALED</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .profile-header h1 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+
+        .visited-laptops {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .visited-item {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            padding: 1.5rem;
+        }
+
+        /* Remove these image-related styles
+        .visited-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px 10px 0 0;
+        }
+        */
+
+        .visited-info {
+            padding: 0;
+        }
+
+        .visited-info h3 {
+            color: #2563eb;
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+        }
+
+        .visit-date {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .no-visits {
+            text-align: center;
+            padding: 3rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            grid-column: 1 / -1;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            transition: background 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .nav-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #b91c1c;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Fix header styles */
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-container nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-container nav ul li a {
+            color: #1e293b;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .header-container nav ul li a:hover {
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="../index.html" class="logo">DETA<span>LED</span></a>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../index.html#laptops">Laptops</a></li>
+                    <li><a href="../index.html#accesories">Accessories</a></li>
+                    <li><button onclick="logoutUser()" class="nav-btn">Logout</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="profile-container">
+        <a href="../index.html" class="back-btn">← Back to Home</a>
+        
+        <div class="profile-header">
+            <h1>My Profile</h1>
+            <p>Welcome, <span id="profileName">Guest</span>!</p>
+        </div>
+
+        <section>
+            <h2>Recently Viewed Laptops</h2>
+            <div id="visitedLaptops" class="visited-laptops">
+                <!-- Visited laptops will be displayed here -->
+            </div>
+        </section>
+    </main>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const userName = localStorage.getItem('currentUser');
+            if (!userName) {
+                window.location.href = '../login/login.html';
+                return;
+            }
+
+            document.getElementById('profileName').textContent = userName;
+
+            // Clear previous guest data if current user is guest
+            if (userName === 'Guest') {
+                localStorage.removeItem('laptopVisits_Guest');
+            }
+
+            // Get visited laptops specific to this user
+            const visitedLaptops = document.getElementById('visitedLaptops');
+            const storageKey = `laptopVisits_${userName}`;
+            const visits = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            console.log('Retrieved visits for', userName, ':', visits); // For debugging
+
+            if (visits.length === 0) {
+                visitedLaptops.innerHTML = `
+                    <div class="no-visits">
+                        <h3>No laptops viewed yet</h3>
+                        <p>Start exploring our collection of laptops!</p>
+                        <a href="../index.html#laptops" class="btn">Browse Laptops</a>
+                    </div>
+                `;
+            } else {
+                visitedLaptops.innerHTML = ''; // Clear existing content
+                visits.forEach(visit => {
+                    const visitElement = document.createElement('div');
+                    visitElement.className = 'visited-item';
+                    visitElement.innerHTML = `
+                        <div class="visited-info">
+                            <h3>${visit.name}</h3>
+                            <p class="visit-date">Viewed on: ${new Date(visit.timestamp).toLocaleString()}</p>
+                            <p>Price: ${visit.price}</p>
+                            <a href="../${visit.url}" class="btn">View Again</a>
+                        </div>
+                    `;
+                    visitedLaptops.appendChild(visitElement);
+                });
+            }
+        });
+
+        // Track laptop views
+        function trackLaptopView(laptopData) {
+            const userName = localStorage.getItem('currentUser') || 'Guest';
+            const storageKey = `laptopVisits_${userName}`;
+            let visits = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            // Add new visit with timestamp
+            visits.unshift({
+                ...laptopData,
+                timestamp: new Date().toISOString()
+            });
+
+            // Keep only last 10 visits
+            visits = visits.slice(0, 10);
+            
+            // Save updated visits
+            localStorage.setItem(storageKey, JSON.stringify(visits));
+        }
+
+        function logoutUser() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                // Only store user data for non-guest users
+                if (currentUser !== 'Guest') {
+                    const userData = {
+                        lastLogin: localStorage.getItem(`lastLogin_${currentUser}`),
+                        logoutTime: new Date().toISOString(),
+                        visits: localStorage.getItem(`laptopVisits_${currentUser}`)
+                    };
+                    localStorage.setItem(`userData_${currentUser}`, JSON.stringify(userData));
+                } else {
+                    // Clear guest data only when they log out
+                    localStorage.removeItem('laptopVisits_Guest');
+                }
+                
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('loginShown');
+                
+                window.location.href = '../login/login.html';
+            } else {
+                window.location.href = '../login/login.html';
+            }
+        }
+    </script>
+</body>
+</html>

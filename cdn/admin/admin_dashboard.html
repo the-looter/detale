@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - DETALED</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --accent: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--dark);
+            color: white;
+            padding: 2rem;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: var(--light);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .user-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: var(--accent);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sidebar">
+            <h2>DETA<span style="color: var(--accent)">LED</span></h2>
+            <nav style="margin-top: 2rem;">
+                <ul style="list-style: none;">
+                    <li><a href="#" style="color: white; text-decoration: none;">Dashboard</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Admin Dashboard</h1>
+                <a href="admin_login.html" class="btn-logout">Logout</a>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p id="totalUsers" style="font-size: 2rem; font-weight: bold;">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Users</h3>
+                    <p id="activeUsers" style="font-size: 2rem; font-weight: bold;">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Visits</h3>
+                    <p id="totalVisits" style="font-size: 2rem; font-weight: bold;">0</p>
+                </div>
+            </div>
+
+            <div class="user-table">
+                <h2 style="padding: 1rem;">Registered Users</h2>
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Login Time</th>
+                            <th>Last Activity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if admin is logged in
+        if (!localStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'admin-login.html';
+        }
+
+        function loadUserData() {
+            const users = [];
+            let totalVisits = 0;
+            
+            const userTableBody = document.getElementById('userTableBody');
+            userTableBody.innerHTML = '';
+            
+            const processedUsers = new Set();
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('userData_')) {
+                    const username = key.replace('userData_', '');
+                    
+                    if (processedUsers.has(username)) continue;
+                    processedUsers.add(username);
+                    
+                    const userData = JSON.parse(localStorage.getItem(key));
+                    const userVisits = JSON.parse(localStorage.getItem(`laptopVisits_${username}`) || '[]');
+                    totalVisits += userVisits.length;
+                    
+                    // Get the last logout time or use last login if no logout
+                    const lastActivity = userData.logoutTime || userData.lastLogin;
+                    
+                    users.push({
+                        username: username,
+                        loginTime: userData.lastLogin,
+                        lastActivity: lastActivity,
+                        visits: userVisits
+                    });
+                }
+            }
+
+            // Update stats
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('totalVisits').textContent = totalVisits;
+            document.getElementById('activeUsers').textContent = users.filter(user => {
+                const lastActivity = new Date(user.lastActivity);
+                return (new Date() - lastActivity) < 30 * 60 * 1000;
+            }).length;
+
+            // Populate table
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const isActive = (new Date() - new Date(user.lastActivity)) < 30 * 60 * 1000;
+                
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${new Date(user.loginTime).toLocaleString()}</td>
+                    <td>${new Date(user.lastActivity).toLocaleString()}</td>
+                    <td style="color: ${isActive ? '#10b981' : '#ef4444'}">${isActive ? 'Active' : 'Inactive'}</td>
+                `;
+                userTableBody.appendChild(row);
+            });
+        }
+
+        // Load initial data
+        loadUserData();
+
+        // Refresh data every 10 seconds
+        // Add this after the loadUserData function
+        function trackLoginEvent(username, type) {
+            let loginEvents = JSON.parse(localStorage.getItem('loginEvents') || '[]');
+            loginEvents.push({
+                username,
+                type, // 'login' or 'logout'
+                timestamp: new Date().toISOString()
+            });
+            // Keep only last 50 events
+            loginEvents = loginEvents.slice(-50);
+            localStorage.setItem('loginEvents', JSON.stringify(loginEvents));
+        }
+
+        // Refresh data more frequently for real-time updates
+        setInterval(loadUserData, 5000);
+    </script>
+</body>
+</html>
