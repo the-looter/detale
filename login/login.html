@@ -163,7 +163,7 @@
     <script>
             window.addEventListener('DOMContentLoaded', function() {
                 if (localStorage.getItem('currentUser')) {
-                    window.location.replace('index.html');
+                    window.location.replace('/index.html');
                 }
             });
 
@@ -197,7 +197,7 @@
                     });
                     localStorage.setItem('loginEvents', JSON.stringify(loginEvents));
 
-                    window.location.replace('index.html');
+                    window.location.replace('/index.html');
                 }
                 return false;
             }
@@ -220,7 +220,7 @@
                 });
                 localStorage.setItem('loginEvents', JSON.stringify(loginEvents));
 
-                window.location.replace('index.html');
+                window.location.replace('/index.html');
             }
         </script>
 </body>
